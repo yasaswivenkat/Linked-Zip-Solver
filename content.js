@@ -102,22 +102,43 @@
 
             <div class="zip-hud-secondary-row">
               <button class="zip-hud-btn zip-hud-btn-secondary" id="zip-hud-hint-btn" ${!gamePresent ? 'disabled' : ''}>
-                👁️ Show Hints
+                👁️ Hints
+              </button>
+              <button class="zip-hud-btn zip-hud-btn-secondary" id="zip-hud-step-btn" ${!gamePresent ? 'disabled' : ''}>
+                🎓 Step Mode
               </button>
               <button class="zip-hud-btn zip-hud-btn-secondary" id="zip-hud-clear-btn">
                 ✕ Clear
               </button>
             </div>
+
+            <div id="zip-hud-step-controls" style="display: none; flex-direction: column; gap: 6px; background: rgba(30, 41, 59, 0.7); padding: 8px 10px; border-radius: 10px; border: 1px dashed rgba(56, 189, 248, 0.4);">
+              <div style="display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 600;">
+                <span style="color: #94a3b8;">Step Guide:</span>
+                <span id="zip-step-counter" style="color: #38bdf8;">0 / --</span>
+              </div>
+              <div style="display: flex; gap: 6px;">
+                <button class="zip-hud-btn zip-hud-btn-primary" id="zip-hud-next-step-btn" style="padding: 6px 10px; font-size: 11.5px;">Next Move ➔</button>
+                <button class="zip-hud-btn zip-hud-btn-secondary" id="zip-hud-finish-step-btn" style="padding: 6px 10px; font-size: 11.5px;">Finish ⚡</button>
+              </div>
+            </div>
           </div>
 
           <div class="zip-hud-options-row">
-            <span class="zip-hud-options-label">Speed:</span>
+            <span class="zip-hud-options-label">Pacing:</span>
             <div class="zip-hud-speed-group">
-              <button class="zip-hud-speed-btn ${currentSpeed === 'instant' ? 'active' : ''}" data-speed="instant">Instant</button>
-              <button class="zip-hud-speed-btn ${currentSpeed === 'fast' ? 'active' : ''}" data-speed="fast">Fast</button>
-              <button class="zip-hud-speed-btn ${currentSpeed === 'human' ? 'active' : ''}" data-speed="human">Human</button>
+              <button class="zip-hud-speed-btn ${currentSpeed === 'instant' ? 'active' : ''}" data-speed="instant" title="Instantaneous solve">Instant</button>
+              <button class="zip-hud-speed-btn ${currentSpeed === 'fast' ? 'active' : ''}" data-speed="fast" title="Fast smooth draw">Fast</button>
+              <button class="zip-hud-speed-btn ${currentSpeed === 'human' ? 'active' : ''}" data-speed="human" title="Human Stealth: Realistic cornering deceleration & waypoint pauses">☕ Human</button>
             </div>
           </div>
+
+          ${currentSpeed === 'human' ? `
+            <div style="font-size: 10.5px; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 5px 8px; border-radius: 6px; display: flex; align-items: center; gap: 6px;">
+              <span>🛡️</span>
+              <span>Human Stealth: Corner deceleration & waypoint pauses active</span>
+            </div>
+          ` : ''}
         </div>
       `;
 
@@ -161,10 +182,49 @@
         });
       }
 
+      // Step Guide Mode toggle
+      const stepBtn = container.querySelector('#zip-hud-step-btn');
+      const stepControls = container.querySelector('#zip-hud-step-controls');
+      const stepCounter = container.querySelector('#zip-step-counter');
+      const nextStepBtn = container.querySelector('#zip-hud-next-step-btn');
+      const finishStepBtn = container.querySelector('#zip-hud-finish-step-btn');
+
+      if (stepBtn && stepControls) {
+        stepBtn.addEventListener('click', async () => {
+          try {
+            const state = await window.ZipDomBridge.initStepGuide();
+            stepControls.style.display = 'flex';
+            stepCounter.textContent = `0 / ${state.totalSteps}`;
+          } catch (e) {
+            alert('Step Guide error: ' + e.message);
+          }
+        });
+
+        if (nextStepBtn) {
+          nextStepBtn.addEventListener('click', () => {
+            const res = window.ZipDomBridge.stepForward();
+            if (res.done) {
+              stepCounter.textContent = 'Complete! 🎉';
+              nextStepBtn.disabled = true;
+            } else {
+              stepCounter.textContent = `${res.currentStep} / ${res.totalSteps}`;
+            }
+          });
+        }
+
+        if (finishStepBtn) {
+          finishStepBtn.addEventListener('click', async () => {
+            stepControls.style.display = 'none';
+            await window.ZipDomBridge.executeSolve({ speed: currentSpeed });
+          });
+        }
+      }
+
       const clearBtn = container.querySelector('#zip-hud-clear-btn');
       if (clearBtn) {
         clearBtn.addEventListener('click', () => {
           window.ZipDomBridge.clearHintOverlay();
+          if (stepControls) stepControls.style.display = 'none';
         });
       }
 
@@ -270,6 +330,23 @@
       }
       sendResponse({ success: true });
       return true;
+    }
+  });
+
+  // Hotkey Listeners: Alt+Shift+Z for Auto-Solve, Space for Step Forward
+  window.addEventListener('keydown', (e) => {
+    if (e.altKey && e.shiftKey && (e.key === 'Z' || e.key === 'z')) {
+      e.preventDefault();
+      console.info('[ZipSolver] Alt+Shift+Z hotkey detected. Triggering solve...');
+      window.ZipDomBridge.executeSolve({ speed: currentSpeed });
+    }
+    if (e.code === 'Space') {
+      const stepControls = document.getElementById('zip-hud-step-controls');
+      if (stepControls && stepControls.style.display !== 'none') {
+        e.preventDefault();
+        const nextBtn = document.getElementById('zip-hud-next-step-btn');
+        if (nextBtn && !nextBtn.disabled) nextBtn.click();
+      }
     }
   });
 

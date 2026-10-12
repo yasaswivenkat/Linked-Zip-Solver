@@ -74,12 +74,20 @@
 
       <!-- Speed Control -->
       <div class="setting-row">
-        <span class="setting-label">Execution Speed</span>
-        <div class="speed-segmented" id="speed-selector">
-          <button class="speed-option" data-speed="instant">Instant</button>
-          <button class="speed-option active" data-speed="fast">Fast</button>
-          <button class="speed-option" data-speed="human">Human</button>
+        <div class="setting-text-group">
+          <span class="setting-label">Execution Pacing</span>
+          <span class="setting-desc" id="speed-description">Human Mimic: Corner slowdown & hesitation</span>
         </div>
+        <div class="speed-segmented" id="speed-selector">
+          <button class="speed-option" data-speed="instant" title="Instantaneous">⚡ Instant</button>
+          <button class="speed-option" data-speed="fast" title="Fast smooth draw">🐇 Fast</button>
+          <button class="speed-option active" data-speed="human" title="Human Stealth Mimicry">☕ Human</button>
+        </div>
+      </div>
+
+      <div class="stealth-info-pill">
+        <span class="pill-icon">🛡️</span>
+        <span class="pill-text"><strong>Human Stealth:</strong> Realistic corner deceleration, waypoint reflection pauses & micro-jitter active.</span>
       </div>
 
       <!-- Auto Solve Toggle -->

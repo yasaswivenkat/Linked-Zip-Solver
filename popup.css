@@ -424,3 +424,27 @@ input:checked + .toggle-slider:before {
 .link-icon {
   font-size: 13px;
 }
+
+/* Stealth Info Pill */
+.stealth-info-pill {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: #bae6fd;
+  line-height: 1.35;
+}
+
+.stealth-info-pill strong {
+  color: #38bdf8;
+}
+
+.pill-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}

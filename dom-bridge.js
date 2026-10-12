@@ -271,13 +271,18 @@
     }
 
     /**
-     * Dispatches human-like pointer and mouse events to a cell.
+     * Dispatches human-like pointer and mouse events to a cell with micro-jitter.
      */
-    dispatchInteraction(targetEl) {
+    dispatchInteraction(targetEl, options = {}) {
       if (!targetEl) return;
       const rect = targetEl.getBoundingClientRect();
-      const clientX = rect.left + rect.width / 2;
-      const clientY = rect.top + rect.height / 2;
+
+      // Humanized sub-pixel jitter: avoids robotic dead-center clicks
+      const jitterX = options.humanize ? (Math.random() - 0.5) * 6 : 0;
+      const jitterY = options.humanize ? (Math.random() - 0.5) * 6 : 0;
+
+      const clientX = rect.left + rect.width / 2 + jitterX;
+      const clientY = rect.top + rect.height / 2 + jitterY;
 
       const eventInit = {
         bubbles: true,
@@ -285,12 +290,16 @@
         view: window,
         clientX,
         clientY,
-        screenX: clientX + window.screenX,
-        screenY: clientY + window.screenY,
-        buttons: 1
+        screenX: clientX + (window.screenX || 0),
+        screenY: clientY + (window.screenY || 0),
+        buttons: 1,
+        pointerId: 1,
+        isPrimary: true
       };
 
-      // Full event suite for broad compatibility
+      // Full event suite simulating human contact
+      targetEl.dispatchEvent(new PointerEvent('pointerover', eventInit));
+      targetEl.dispatchEvent(new PointerEvent('pointerenter', eventInit));
       targetEl.dispatchEvent(new PointerEvent('pointerdown', eventInit));
       targetEl.dispatchEvent(new MouseEvent('mousedown', eventInit));
       targetEl.dispatchEvent(new PointerEvent('pointerup', eventInit));
@@ -300,6 +309,7 @@
 
     /**
      * Executes the automatic puzzle solve by clicking cells.
+     * Includes Human Stealth Mimicry with variable cornering latencies and waypoint reflection pauses.
      * @param {Object} options Options: speed ('instant' | 'fast' | 'human' | number), useCompressed (boolean)
      */
     async executeSolve(options = {}) {
@@ -313,30 +323,55 @@
         const { orderedCells, fullSequence, compressedTurns } = await this.solveCurrentGame();
         this.clearHintOverlay();
 
-        // Speed delay determination
-        let delayMs = 60;
-        if (options.speed === 'instant') delayMs = 0;
-        else if (options.speed === 'fast') delayMs = 30;
-        else if (options.speed === 'human') delayMs = 120;
-        else if (typeof options.speed === 'number') delayMs = options.speed;
+        const isHumanMode = options.speed === 'human';
+        let baseDelay = 60;
+        if (options.speed === 'instant') baseDelay = 0;
+        else if (options.speed === 'fast') baseDelay = 35;
+        else if (isHumanMode) baseDelay = 110;
+        else if (typeof options.speed === 'number') baseDelay = options.speed;
 
-        // We can click turn-points (compressed) or every cell
-        // In modern LinkedIn Zip, clicking endpoints of runs connects them.
-        // For maximal reliability, we click turn-points if compressed is requested, or cell-by-cell.
         const sequenceToClick = options.useTurnPoints ? compressedTurns : fullSequence;
 
-        console.info(`[ZipSolver] Executing solve with ${sequenceToClick.length} clicks (Delay: ${delayMs}ms)...`);
+        console.info(`[ZipSolver] Executing solve (${sequenceToClick.length} clicks, Mode: ${options.speed || 'default'})...`);
+
+        let prevDiff = null;
 
         for (let i = 0; i < sequenceToClick.length; i++) {
           const cellIdx = sequenceToClick[i];
           const cellEl = orderedCells[cellIdx];
 
           if (cellEl) {
-            this.dispatchInteraction(cellEl);
+            this.dispatchInteraction(cellEl, { humanize: isHumanMode });
           }
 
-          if (delayMs > 0) {
-            await sleep(delayMs);
+          if (baseDelay > 0) {
+            let stepDelay = baseDelay;
+
+            if (isHumanMode) {
+              // 1. Direction change / cornering deceleration
+              if (i > 0 && i < sequenceToClick.length - 1) {
+                const currentDiff = sequenceToClick[i] - sequenceToClick[i - 1];
+                if (prevDiff !== null && currentDiff !== prevDiff) {
+                  // Decelerate at 90-degree corner like a human hand
+                  stepDelay += 45 + Math.random() * 25;
+                }
+                prevDiff = currentDiff;
+              }
+
+              // 2. Waypoint reflection: natural hesitation on numbered nodes
+              const hasNumber = cellEl && (
+                cellEl.querySelector('[data-cell-content="true"]') ||
+                cellEl.querySelector('.trail-cell-content')
+              );
+              if (hasNumber && hasNumber.textContent.trim().length > 0) {
+                stepDelay += 85 + Math.random() * 35;
+              }
+
+              // 3. Natural micro-jitter (normal distribution around base speed)
+              stepDelay += (Math.random() - 0.5) * 20;
+            }
+
+            await sleep(Math.max(10, Math.round(stepDelay)));
           }
         }
 
@@ -345,6 +380,37 @@
       } finally {
         this.isSolving = false;
       }
+    }
+
+    /**
+     * Step-by-Step Teaching / Guided Mode
+     */
+    async initStepGuide() {
+      const { orderedCells, fullSequence } = await this.solveCurrentGame();
+      this.stepState = {
+        orderedCells,
+        fullSequence,
+        currentIndex: 0
+      };
+      this.clearHintOverlay();
+      return { totalSteps: fullSequence.length, currentStep: 0 };
+    }
+
+    stepForward() {
+      if (!this.stepState || this.stepState.currentIndex >= this.stepState.fullSequence.length) {
+        return { done: true };
+      }
+      const cellIdx = this.stepState.fullSequence[this.stepState.currentIndex];
+      const cellEl = this.stepState.orderedCells[cellIdx];
+      if (cellEl) {
+        this.dispatchInteraction(cellEl, { humanize: true });
+      }
+      this.stepState.currentIndex++;
+      return {
+        currentStep: this.stepState.currentIndex,
+        totalSteps: this.stepState.fullSequence.length,
+        done: this.stepState.currentIndex >= this.stepState.fullSequence.length
+      };
     }
 
     /**

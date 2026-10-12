@@ -22,6 +22,15 @@
   "background": {
     "service_worker": "background.js"
   },
+  "commands": {
+    "solve-zip": {
+      "suggested_key": {
+        "default": "Alt+Shift+Z",
+        "mac": "Alt+Shift+Z"
+      },
+      "description": "Trigger Auto-Solve for LinkedIn Zip puzzle"
+    }
+  },
   "permissions": [
     "storage",
     "activeTab",

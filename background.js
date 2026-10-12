@@ -72,3 +72,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 });
+
+// Global Keyboard Shortcut Handler (Alt+Shift+Z)
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command === 'solve-zip') {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.id) {
+      chrome.tabs.sendMessage(tab.id, { action: 'SOLVE_ZIP' }).catch(err => {
+        console.debug('Failed to send keyboard command:', err);
+      });
+    }
+  }
+});

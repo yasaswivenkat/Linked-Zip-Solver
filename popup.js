@@ -252,10 +252,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  const speedDescription = document.getElementById('speed-description');
+  const stealthPill = document.querySelector('.stealth-info-pill');
+
   function updateSpeedUI(speed) {
     speedSelector.querySelectorAll('.speed-option').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.speed === speed);
     });
+
+    if (speedDescription) {
+      if (speed === 'instant') {
+        speedDescription.textContent = 'Instantaneous: 0ms execution';
+      } else if (speed === 'fast') {
+        speedDescription.textContent = 'Fast Pacing: 35ms animated trace';
+      } else {
+        speedDescription.textContent = 'Human Stealth: Corner deceleration & reflection pauses';
+      }
+    }
+
+    if (stealthPill) {
+      stealthPill.style.display = speed === 'human' ? 'flex' : 'none';
+    }
   }
 
   // Toggles handlers
