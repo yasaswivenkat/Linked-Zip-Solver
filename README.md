@@ -4,7 +4,7 @@
 
 ### *High-Performance, Algorithmic Hamiltonian Path Engine & Automated Browser Bot*
 
-[![CI & Extension Build](https://github.com/your-username/linkedin-zip-puzzle-solver/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/linkedin-zip-puzzle-solver/actions)
+[![CI & Extension Build](https://github.com/yasaswivenkat/Linked-Zip-Solver/actions/workflows/ci.yml/badge.svg)](https://github.com/yasaswivenkat/Linked-Zip-Solver/actions)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-38bdf8?style=flat-square&logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B%20%7C%2020%2B%20%7C%2022%2B-22c55e?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
