@@ -1,0 +1,33 @@
+{
+  "name": "linkedin-zip-puzzle-solver",
+  "version": "1.0.0",
+  "description": "Lightning-Fast Hamiltonian Path Automated Solver for Daily LinkedIn Zip Puzzles (Chrome Extension Manifest V3)",
+  "main": "solver.js",
+  "scripts": {
+    "test": "node tests/solver.test.js",
+    "benchmark": "node tests/benchmark.js",
+    "package": "node -e \"const fs=require('fs'),arch=require('child_process'); console.log('Packaging extension...');\""
+  },
+  "keywords": [
+    "linkedin",
+    "linkedin-games",
+    "zip-puzzle",
+    "hamiltonian-path",
+    "puzzle-solver",
+    "chrome-extension",
+    "manifest-v3",
+    "backtracking-algorithm",
+    "degree-pruning",
+    "automation"
+  ],
+  "author": "Yasaswi Venkat",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/linkedin-zip-puzzle-solver.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/linkedin-zip-puzzle-solver/issues"
+  },
+  "homepage": "https://github.com/your-username/linkedin-zip-puzzle-solver#readme"
+}

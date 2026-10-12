@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkedIn Zip Puzzle Auto-Solver</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-brand">
+        <div class="logo-wrapper">
+          <img src="icons/icon-48.png" alt="Zip Logo" class="logo-img">
+          <div class="logo-glow"></div>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">Zip Solver</h1>
+          <p class="brand-subtitle">Automated LinkedIn Bot</p>
+        </div>
+      </div>
+      <div class="version-badge">v1.0</div>
+    </header>
+
+    <!-- Game Status Card -->
+    <section class="status-card" id="status-card">
+      <div class="status-indicator">
+        <div class="status-dot-pulse" id="status-dot"></div>
+        <div class="status-info">
+          <div class="status-title" id="status-title">Checking Tab...</div>
+          <div class="status-subtitle" id="status-subtitle">Detecting LinkedIn Zip game state</div>
+        </div>
+      </div>
+      <div class="game-meta" id="game-meta" style="display: none;">
+        <span class="meta-tag" id="meta-grid">Grid: 6x6</span>
+        <span class="meta-tag" id="meta-waypoints">Waypoints: 4</span>
+      </div>
+    </section>
+
+    <!-- Main Action Buttons -->
+    <section class="actions-section">
+      <button class="btn btn-primary" id="btn-solve" disabled>
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+        <span id="btn-solve-text">Auto-Solve Puzzle</span>
+      </button>
+
+      <div class="button-row">
+        <button class="btn btn-secondary" id="btn-hint" disabled>
+          <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          Show Hints
+        </button>
+        <button class="btn btn-secondary" id="btn-clear" disabled>
+          <svg class="btn-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          Clear
+        </button>
+      </div>
+    </section>
+
+    <!-- Configuration Options -->
+    <section class="settings-card">
+      <div class="settings-title">SOLVER SETTINGS</div>
+
+      <!-- Speed Control -->
+      <div class="setting-row">
+        <span class="setting-label">Execution Speed</span>
+        <div class="speed-segmented" id="speed-selector">
+          <button class="speed-option" data-speed="instant">Instant</button>
+          <button class="speed-option active" data-speed="fast">Fast</button>
+          <button class="speed-option" data-speed="human">Human</button>
+        </div>
+      </div>
+
+      <!-- Auto Solve Toggle -->
+      <div class="setting-row">
+        <div class="setting-text-group">
+          <span class="setting-label">Auto-Solve On Load</span>
+          <span class="setting-desc">Solves as soon as puzzle loads</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-autosolve">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- In-Page HUD Toggle -->
+      <div class="setting-row">
+        <div class="setting-text-group">
+          <span class="setting-label">In-Page Floating Widget</span>
+          <span class="setting-desc">Quick buttons directly on LinkedIn</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-hud" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Utility & Navigation Links -->
+    <footer class="footer-links">
+      <button class="link-btn" id="link-playground">
+        <span class="link-icon">🎮</span>
+        <span>Open Puzzle Playground & Test Arena</span>
+      </button>
+      <button class="link-btn secondary-link" id="link-open-game">
+        <span class="link-icon">↗</span>
+        <span>Launch LinkedIn Zip Game</span>
+      </button>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
