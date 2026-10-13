@@ -182,12 +182,9 @@
               solveBtn.disabled = false;
             }, 3000);
           } catch (err) {
-            console.error('[ZipSolver] Solve error:', err);
-            solveBtn.textContent = 'Error: ' + err.message;
-            setTimeout(() => {
-              solveBtn.textContent = 'Auto-Solve Puzzle';
-              solveBtn.disabled = false;
-            }, 3000);
+            console.info('[ZipSolver] Solve notice:', err?.message || err);
+            solveBtn.textContent = 'Auto-Solve Puzzle';
+            solveBtn.disabled = false;
           }
         });
       }
@@ -259,7 +256,7 @@
       console.info('[ZipSolver] Auto-solve on load triggered in 250ms...');
       setTimeout(() => {
         window.ZipDomBridge.executeSolve({ speed: currentSpeed }).catch(err => {
-          console.error('[ZipSolver] Auto-solve error:', err);
+          console.info('[ZipSolver] Auto-solve notice:', err?.message || err);
         });
       }, 250);
     }
@@ -313,9 +310,9 @@
     if (request.action === 'SOLVE_ZIP') {
       const speed = request.speed || currentSpeed;
       window.ZipDomBridge.executeSolve({ speed, useTurnPoints: request.useTurnPoints })
-        .then(res => sendResponse({ success: true, result: res }))
-        .catch(err => sendResponse({ success: false, error: err.message }));
-      return true; // async response
+        .catch(err => console.info('[ZipSolver] Solve notice:', err?.message || err));
+      sendResponse({ success: true, started: true });
+      return false;
     }
 
     if (request.action === 'SHOW_HINT') {

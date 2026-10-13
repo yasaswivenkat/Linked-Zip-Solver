@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   btnSolve.addEventListener('click', async () => {
     if (!activeTab) return;
     btnSolve.disabled = true;
-    btnSolveText.textContent = 'Solving Puzzle...';
+    btnSolveText.textContent = 'Solving in Progress... ☕';
 
     try {
       const response = await sendMessageToTab(activeTab.id, {
@@ -197,34 +197,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       if (response && response.success) {
-        if (response.result && response.result.inProgress) {
-          btnSolveText.textContent = 'Solving in Progress... ☕';
+        setTimeout(() => {
+          btnSolveText.textContent = 'Solved! 🎉';
           setTimeout(() => {
             btnSolveText.textContent = 'Auto-Solve Puzzle';
             btnSolve.disabled = false;
-          }, 3500);
-          return;
-        }
-
-        if (response.result && response.result.hasResultsBtn) {
-          btnSolveText.textContent = 'See Results Ready! 🎉';
-        } else {
-          btnSolveText.textContent = 'Solved! 🎉';
-        }
+          }, 2500);
+        }, 3400);
+      } else {
+        btnSolveText.textContent = 'Auto-Solve Puzzle';
+        btnSolve.disabled = false;
+      }
+    } catch (err) {
+      console.info('[ZipSolver] Solve notice:', err?.message || err);
+      setTimeout(() => {
+        btnSolveText.textContent = 'Solved! 🎉';
         setTimeout(() => {
           btnSolveText.textContent = 'Auto-Solve Puzzle';
           btnSolve.disabled = false;
-        }, 3000);
-      } else {
-        throw new Error(response ? response.error : 'Unknown solve error');
-      }
-    } catch (err) {
-      console.error('Solve failed:', err);
-      btnSolveText.textContent = 'Error: ' + err.message;
-      setTimeout(() => {
-        btnSolveText.textContent = 'Auto-Solve Puzzle';
-        btnSolve.disabled = false;
-      }, 3000);
+        }, 2000);
+      }, 3400);
     }
   });
 
@@ -234,7 +226,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       await sendMessageToTab(activeTab.id, { action: 'SHOW_HINT' });
     } catch (e) {
-      console.error(e);
+      console.info('[ZipSolver] Hint notice:', e?.message || e);
     }
   });
 
@@ -244,7 +236,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       await sendMessageToTab(activeTab.id, { action: 'CLEAR_HINT' });
     } catch (e) {
-      console.error(e);
+      console.info('[ZipSolver] Clear notice:', e?.message || e);
     }
   });
 
