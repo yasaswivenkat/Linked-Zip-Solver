@@ -67,29 +67,42 @@
      */
     extractHydrationSolution(doc = document) {
       try {
-        // Look for script#rehydrate-data
-        const scripts = [
-          doc.getElementById('rehydrate-data'),
-          ...Array.from(doc.querySelectorAll('script[type="application/json"]')),
-          ...Array.from(doc.querySelectorAll('script')).filter(s => s.textContent.includes('"solution"'))
-        ].filter(Boolean);
+        const allDocs = [doc];
+        const iframes = doc.querySelectorAll('iframe');
+        for (const iframe of iframes) {
+          try {
+            const frameDoc = iframe.contentDocument || iframe.contentWindow?.document;
+            if (frameDoc) allDocs.push(frameDoc);
+          } catch (e) {
+            // Cross-origin iframe
+          }
+        }
 
-        for (const script of scripts) {
-          const content = script.textContent;
-          if (!content) continue;
+        for (const targetDoc of allDocs) {
+          // 1. Look for script#rehydrate-data and application/json scripts
+          const scripts = [
+            targetDoc.getElementById('rehydrate-data'),
+            ...Array.from(targetDoc.querySelectorAll('script[type="application/json"]')),
+            ...Array.from(targetDoc.querySelectorAll('script')).filter(s => (s.textContent || '').includes('solution'))
+          ].filter(Boolean);
 
-          // Search for "solution":[...] or \"solution\":[...]
-          const match = content.match(/\\?"solution\\?"\s*:\s*\[([\d,\s]+)\]/);
-          if (match && match[1]) {
-            const solution = match[1].split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
-            if (solution.length > 0) {
-              console.info('[ZipSolver] Successfully extracted solution from hydration data:', solution);
-              return solution;
+          for (const script of scripts) {
+            const content = script.textContent;
+            if (!content) continue;
+
+            // Search for "solution":[...] or \"solution\":[...] or &quot;solution&quot;:[...]
+            const match = content.match(/(?:\\?"|&quot;)solution(?:\\?"|&quot;)\s*:\s*\[([\d,\s]+)\]/);
+            if (match && match[1]) {
+              const solution = match[1].split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+              if (solution.length > 0) {
+                console.info('[ZipSolver] Successfully extracted solution from hydration data:', solution);
+                return solution;
+              }
             }
           }
         }
       } catch (err) {
-        console.warn('[ZipSolver] Hydration extraction failed, falling back to algorithmic solver:', err);
+        console.warn('[ZipSolver] Hydration extraction notice:', err);
       }
       return null;
     }
@@ -204,15 +217,17 @@
         }
 
         // Down wall check
-        const hasDownWall = cell.querySelector('.trail-cell-wall--down') !== null ||
+        const hasDownWall = cell.querySelector('.trail-cell-wall--down, [class*="wall-down"], [class*="wall--down"], [class*="wall-bottom"], [data-wall-down]') !== null ||
                             cell.classList.contains('wall-down') ||
-                            cell.hasAttribute('data-wall-down');
+                            cell.classList.contains('wall-bottom') ||
+                            cell.hasAttribute('data-wall-down') ||
+                            cell.hasAttribute('data-wall-bottom');
         if (hasDownWall) {
           downWalls.push(idx);
         }
 
         // Right wall check
-        const hasRightWall = cell.querySelector('.trail-cell-wall--right') !== null ||
+        const hasRightWall = cell.querySelector('.trail-cell-wall--right, [class*="wall-right"], [class*="wall--right"], [data-wall-right]') !== null ||
                              cell.classList.contains('wall-right') ||
                              cell.hasAttribute('data-wall-right');
         if (hasRightWall) {
@@ -246,15 +261,34 @@
       let solution = this.extractHydrationSolution();
       const totalCells = gridState.rows * gridState.cols;
 
-      // Validate hydration solution if extracted
-      const isHydrationValid = solution &&
+      const startNode = gridState.numberedCells[0];
+      let isHydrationValid = false;
+
+      // Validate hydration solution if extracted:
+      // 1. Must match total cells count
+      // 2. Must contain each cell index uniquely
+      // 3. Must start at Checkpoint 1 (or end at Checkpoint 1, in which case we reverse it)
+      if (
+        solution &&
         Array.isArray(solution) &&
         solution.length === totalCells &&
-        new Set(solution).size === totalCells;
+        new Set(solution).size === totalCells
+      ) {
+        if (solution[0] === startNode) {
+          isHydrationValid = true;
+          console.info('[ZipSolver] Hydration solution verified: starts directly at checkpoint 1.');
+        } else if (solution[solution.length - 1] === startNode) {
+          solution = solution.slice().reverse();
+          isHydrationValid = true;
+          console.info('[ZipSolver] Hydration solution was reversed; inverted to correctly start at checkpoint 1.');
+        } else {
+          console.warn(`[ZipSolver] Hydration solution does not start or end at checkpoint 1 (starts: ${solution[0]}, checkpoint 1: ${startNode}). Rejecting hydration.`);
+        }
+      }
 
       if (!isHydrationValid) {
         if (solution) {
-          console.warn('[ZipSolver] Hydration data incomplete; solving with Hamiltonian Backtracking engine...');
+          console.warn('[ZipSolver] Hydration data unusable; solving with Hamiltonian Backtracking engine...');
         } else {
           console.info('[ZipSolver] Solving puzzle using Hamiltonian Backtracking engine...');
         }
@@ -332,11 +366,6 @@
       if (inner) {
         inner.dispatchEvent(new PointerEvent('pointerdown', downInit));
         inner.dispatchEvent(new MouseEvent('mousedown', downInit));
-      }
-
-      targetEl.dispatchEvent(new MouseEvent('click', { ...downInit, buttons: 0 }));
-      if (inner) {
-        inner.dispatchEvent(new MouseEvent('click', { ...downInit, buttons: 0 }));
       }
 
       return { clientX, clientY };
@@ -421,16 +450,7 @@
       if (inner) {
         inner.dispatchEvent(new PointerEvent('pointerenter', moveInit));
         inner.dispatchEvent(new PointerEvent('pointermove', moveInit));
-      }
-
-      // Fire cell activation events for LinkedIn's hybrid tracking
-      targetEl.dispatchEvent(new MouseEvent('mousedown', moveInit));
-      targetEl.dispatchEvent(new MouseEvent('mouseup', { ...moveInit, buttons: 0 }));
-      targetEl.dispatchEvent(new MouseEvent('click', { ...moveInit, buttons: 0 }));
-      if (inner) {
-        inner.dispatchEvent(new MouseEvent('mousedown', moveInit));
-        inner.dispatchEvent(new MouseEvent('mouseup', { ...moveInit, buttons: 0 }));
-        inner.dispatchEvent(new MouseEvent('click', { ...moveInit, buttons: 0 }));
+        inner.dispatchEvent(new MouseEvent('mousemove', moveInit));
       }
 
       return { clientX, clientY };
