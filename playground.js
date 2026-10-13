@@ -293,8 +293,8 @@ document.addEventListener('DOMContentLoaded', () => {
       badgeStatus.textContent = `Solved in ${elapsed}ms! 🎉`;
       badgeStatus.style.color = '#22c55e';
     } catch (err) {
-      console.error(err);
-      badgeStatus.textContent = 'Solver error: ' + err.message;
+      console.warn('[Playground] Solver notice:', err);
+      badgeStatus.textContent = 'Solver notice: ' + err.message;
       badgeStatus.style.color = '#ef4444';
     } finally {
       isSolvingAnimation = false;
