@@ -197,6 +197,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       if (response && response.success) {
+        if (response.result && response.result.inProgress) {
+          btnSolveText.textContent = 'Solving in Progress... ☕';
+          setTimeout(() => {
+            btnSolveText.textContent = 'Auto-Solve Puzzle';
+            btnSolve.disabled = false;
+          }, 3500);
+          return;
+        }
+
         if (response.result && response.result.hasResultsBtn) {
           btnSolveText.textContent = 'See Results Ready! 🎉';
         } else {

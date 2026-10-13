@@ -250,12 +250,11 @@
       const isHydrationValid = solution &&
         Array.isArray(solution) &&
         solution.length === totalCells &&
-        solution[0] === gridState.numberedCells[0] &&
         new Set(solution).size === totalCells;
 
       if (!isHydrationValid) {
         if (solution) {
-          console.warn('[ZipSolver] Hydration data incomplete or invalid; solving with Hamiltonian Backtracking engine...');
+          console.warn('[ZipSolver] Hydration data incomplete; solving with Hamiltonian Backtracking engine...');
         } else {
           console.info('[ZipSolver] Solving puzzle using Hamiltonian Backtracking engine...');
         }
@@ -333,6 +332,11 @@
       if (inner) {
         inner.dispatchEvent(new PointerEvent('pointerdown', downInit));
         inner.dispatchEvent(new MouseEvent('mousedown', downInit));
+      }
+
+      targetEl.dispatchEvent(new MouseEvent('click', { ...downInit, buttons: 0 }));
+      if (inner) {
+        inner.dispatchEvent(new MouseEvent('click', { ...downInit, buttons: 0 }));
       }
 
       return { clientX, clientY };
@@ -417,6 +421,16 @@
       if (inner) {
         inner.dispatchEvent(new PointerEvent('pointerenter', moveInit));
         inner.dispatchEvent(new PointerEvent('pointermove', moveInit));
+      }
+
+      // Fire cell activation events for LinkedIn's hybrid tracking
+      targetEl.dispatchEvent(new MouseEvent('mousedown', moveInit));
+      targetEl.dispatchEvent(new MouseEvent('mouseup', { ...moveInit, buttons: 0 }));
+      targetEl.dispatchEvent(new MouseEvent('click', { ...moveInit, buttons: 0 }));
+      if (inner) {
+        inner.dispatchEvent(new MouseEvent('mousedown', moveInit));
+        inner.dispatchEvent(new MouseEvent('mouseup', { ...moveInit, buttons: 0 }));
+        inner.dispatchEvent(new MouseEvent('click', { ...moveInit, buttons: 0 }));
       }
 
       return { clientX, clientY };
@@ -554,9 +568,14 @@
      * @param {Object} options Options: useTurnPoints (boolean), customDelay (number)
      */
     async executeSolve(options = {}) {
+      const now = performance.now();
       if (this.isSolving) {
-        console.warn('[ZipSolver] Solve already in progress.');
-        return;
+        // If previous solve lock has been active for more than 4.5 seconds, auto-release it
+        if (now - (this._solveStartTime || 0) > 4500) {
+          this.isSolving = false;
+        } else {
+          return { success: true, inProgress: true };
+        }
       }
 
       // Safety check: if puzzle is already completed and "See Results" is visible, do not re-solve
@@ -566,12 +585,8 @@
         return { success: true, count: 0, duration: 0, hasResultsBtn: true };
       }
 
-      // Visibility & focus check: ensure tab is actively focused to prevent background-run anomalies
-      if (document.hidden) {
-        throw new Error('Please keep the LinkedIn game tab active and visible while solving.');
-      }
-
       this.isSolving = true;
+      this._solveStartTime = performance.now();
       try {
         const { gridElement, orderedCells, fullSequence, compressedTurns } = await this.solveCurrentGame();
         this.clearHintOverlay();
@@ -656,6 +671,7 @@
         }
       } finally {
         this.isSolving = false;
+        this._solveStartTime = 0;
       }
     }
 
