@@ -242,12 +242,23 @@
       if (!gridElement) {
         throw new Error('Zip game board not found. Please ensure you are on the LinkedIn Zip game page.');
       }
-
       const gridState = this.extractGridState(gridElement);
       let solution = this.extractHydrationSolution();
+      const totalCells = gridState.rows * gridState.cols;
 
-      if (!solution || solution.length === 0) {
-        console.info('[ZipSolver] Solving puzzle using Hamiltonian Backtracking engine...');
+      // Validate hydration solution if extracted
+      const isHydrationValid = solution &&
+        Array.isArray(solution) &&
+        solution.length === totalCells &&
+        solution[0] === gridState.numberedCells[0] &&
+        new Set(solution).size === totalCells;
+
+      if (!isHydrationValid) {
+        if (solution) {
+          console.warn('[ZipSolver] Hydration data incomplete or invalid; solving with Hamiltonian Backtracking engine...');
+        } else {
+          console.info('[ZipSolver] Solving puzzle using Hamiltonian Backtracking engine...');
+        }
         const solverResult = ZipSolver.solveZip(
           gridState.rows,
           gridState.cols,
@@ -358,9 +369,6 @@
         inner.dispatchEvent(new PointerEvent('pointerenter', moveInit));
         inner.dispatchEvent(new PointerEvent('pointermove', moveInit));
       }
-
-      // Also fire click event (for hybrid click-tracking systems)
-      targetEl.dispatchEvent(new MouseEvent('click', { ...moveInit, buttons: 0 }));
 
       return { clientX, clientY };
     }
@@ -501,6 +509,13 @@
         return;
       }
 
+      // Safety check: if puzzle is already completed and "See Results" is visible, do not re-solve
+      const alreadyDone = await this.waitForSeeResults(100);
+      if (alreadyDone) {
+        console.info('[ZipSolver] Puzzle already completed! "See Results" button is active.');
+        return { success: true, count: 0, duration: 0, hasResultsBtn: true };
+      }
+
       this.isSolving = true;
       try {
         const { gridElement, orderedCells, fullSequence, compressedTurns } = await this.solveCurrentGame();
@@ -508,13 +523,21 @@
 
         const sequenceToClick = options.useTurnPoints ? compressedTurns : fullSequence;
 
-        // Refined Human Stealth Pacing:
-        // Calibrated to a natural, fluid human solve (~3 to 4 seconds for standard 6x6 daily boards).
-        // Features natural cornering deceleration, waypoint hesitation, and micro-jitter.
-        let baseStepDelay = typeof options.customDelay === 'number' ? options.customDelay : 65;
+        // Natural human reaction hesitation: locate node 1 before touching mouse
+        await sleep(280 + Math.random() * 80);
+
+        // Calibrated Safe Human Stealth Pacing:
+        // Guarantees total solve duration is strictly ~3.4 to 3.8 seconds,
+        // matching fast human play while avoiding anti-cheat flags or server save errors.
+        const targetDurationMs = typeof options.customDuration === 'number'
+          ? options.customDuration
+          : (3400 + Math.random() * 400);
+
+        const expectedPauseOverhead = 350;
+        const baseStepDelay = Math.max(50, Math.round((targetDurationMs - expectedPauseOverhead) / Math.max(1, sequenceToClick.length - 1)));
 
         const startTime = performance.now();
-        console.info(`[ZipSolver] Executing Human Stealth solve (${sequenceToClick.length} nodes, baseStepDelay: ${baseStepDelay}ms)...`);
+        console.info(`[ZipSolver] Executing Human Stealth solve (${sequenceToClick.length} nodes, target: ~${(targetDurationMs / 1000).toFixed(1)}s, stepDelay: ${baseStepDelay}ms)...`);
 
         // 1. Initiate drag: pointerdown on start node
         let coords = this.dispatchDragStart(orderedCells[sequenceToClick[0]], gridElement, { humanize: true });
@@ -564,7 +587,7 @@
         const elapsed = (performance.now() - startTime).toFixed(0);
 
         // 4. Wait for LinkedIn's "See Results" button to appear
-        const seeResultsBtn = await this.waitForSeeResults(3000);
+        const seeResultsBtn = await this.waitForSeeResults(4000);
         if (seeResultsBtn) {
           console.info(`[ZipSolver] Puzzle solved successfully in ${elapsed}ms! "See Results" button is ready! 🎉`);
           seeResultsBtn.style.outline = '3px solid #22c55e';
