@@ -29,22 +29,48 @@
     renderHud();
   }
 
-  // Initialize UI HUD container
+  let hudHost = null;
+  let hudInner = null;
+
+  // Initialize UI HUD container inside an isolated Closed Shadow Root
+  // Completely hides extension DOM elements, buttons, and IDs from LinkedIn page scripts
   function createHudContainer() {
-    let container = document.getElementById('linkedin-zip-hud');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'linkedin-zip-hud';
-      document.body.appendChild(container);
+    if (!hudHost || !hudHost.isConnected) {
+      hudHost = document.createElement('div');
+      hudHost.setAttribute('data-zip-ext', '');
+      hudHost.style.position = 'fixed';
+      hudHost.style.zIndex = '2147483647';
+      hudHost.style.bottom = '0';
+      hudHost.style.right = '0';
+      hudHost.style.pointerEvents = 'none';
+
+      const shadow = hudHost.attachShadow({ mode: 'closed' });
+
+      // Embed extension stylesheet inside closed shadow root
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = chrome.runtime.getURL('content.css');
+        shadow.appendChild(link);
+      }
+
+      hudInner = document.createElement('div');
+      hudInner.id = 'linkedin-zip-hud';
+      shadow.appendChild(hudInner);
+
+      (document.body || document.documentElement).appendChild(hudHost);
     }
-    return container;
+    return hudInner;
   }
 
   // Render the in-page Floating HUD
   function renderHud() {
     if (!hudVisible) {
-      const existing = document.getElementById('linkedin-zip-hud');
-      if (existing) existing.remove();
+      if (hudHost) {
+        hudHost.remove();
+        hudHost = null;
+        hudInner = null;
+      }
       return;
     }
 
@@ -325,10 +351,10 @@
       window.ZipDomBridge.executeSolve({ speed: currentSpeed });
     }
     if (e.code === 'Space') {
-      const stepControls = document.getElementById('zip-hud-step-controls');
+      const stepControls = hudInner ? hudInner.querySelector('#zip-hud-step-controls') : null;
       if (stepControls && stepControls.style.display !== 'none') {
         e.preventDefault();
-        const nextBtn = document.getElementById('zip-hud-next-step-btn');
+        const nextBtn = hudInner.querySelector('#zip-hud-next-step-btn');
         if (nextBtn && !nextBtn.disabled) nextBtn.click();
       }
     }

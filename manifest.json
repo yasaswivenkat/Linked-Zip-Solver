@@ -68,7 +68,8 @@
       "resources": [
         "icons/*",
         "solver.js",
-        "dom-bridge.js"
+        "dom-bridge.js",
+        "content.css"
       ],
       "matches": [
         "*://*.linkedin.com/*",
