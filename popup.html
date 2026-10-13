@@ -72,21 +72,20 @@
     <section class="settings-card">
       <div class="settings-title">SOLVER SETTINGS</div>
 
-      <!-- Speed Control -->
+      <!-- Execution Mode -->
       <div class="setting-row">
         <div class="setting-text-group">
-          <span class="setting-label">Execution Pacing</span>
-          <span class="setting-desc" id="speed-description">Human Mimic: Corner slowdown & hesitation</span>
+          <span class="setting-label">Execution Mode</span>
+          <span class="setting-desc" id="speed-description">Human Stealth (~3–4s natural solve)</span>
         </div>
-        <div class="speed-segmented" id="speed-selector">
-          <button class="speed-option active" data-speed="fast" title="Fast adaptive solve">⚡ Fast</button>
-          <button class="speed-option" data-speed="human" title="Human Stealth Mimicry">☕ Human</button>
+        <div class="badge-status-pill" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-weight: 600; font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(56, 189, 248, 0.3); display: flex; align-items: center; gap: 4px;">
+          <span>☕</span> Human
         </div>
       </div>
 
-      <div class="stealth-info-pill">
+      <div class="stealth-info-pill" style="display: flex;">
         <span class="pill-icon">🛡️</span>
-        <span class="pill-text"><strong>Human Stealth:</strong> Realistic corner deceleration, waypoint reflection pauses & micro-jitter active.</span>
+        <span class="pill-text"><strong>Human Stealth Pacing:</strong> Solves naturally in ~3–4s with corner deceleration & waypoint pauses, guaranteeing reliable game saves & leaderboard rankings.</span>
       </div>
 
       <!-- Auto Solve Toggle -->

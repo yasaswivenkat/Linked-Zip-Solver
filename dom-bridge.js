@@ -491,9 +491,9 @@
     }
 
     /**
-     * Executes the automatic puzzle solve via continuous pointer drag.
-     * Starts with pointerdown at Node 1, draws through all cells, and releases pointerup at finish.
-     * @param {Object} options Options: speed ('fast' | 'human' | number), useCompressed (boolean)
+     * Executes the automatic puzzle solve via humanized continuous pointer drag.
+     * Features refined Human Stealth Mimicry calibrated to ~3-4s (corner deceleration & checkpoint reflection).
+     * @param {Object} options Options: useTurnPoints (boolean), customDelay (number)
      */
     async executeSolve(options = {}) {
       if (this.isSolving) {
@@ -507,21 +507,17 @@
         this.clearHintOverlay();
 
         const sequenceToClick = options.useTurnPoints ? compressedTurns : fullSequence;
-        const isHumanMode = options.speed === 'human';
 
-        // Pacing: Adaptive execution without arbitrary 1-second restrictions.
-        // Solves as fast as the puzzle allows while guaranteeing 100% event delivery, accuracy & game save.
-        let baseStepDelay = 16; // ms per node (~60fps native frame rate, fastest reliable DOM dispatch)
-        if (typeof options.speed === 'number') {
-          baseStepDelay = options.speed;
-        }
+        // Refined Human Stealth Pacing:
+        // Calibrated to a natural, fluid human solve (~3 to 4 seconds for standard 6x6 daily boards).
+        // Features natural cornering deceleration, waypoint hesitation, and micro-jitter.
+        let baseStepDelay = typeof options.customDelay === 'number' ? options.customDelay : 65;
 
         const startTime = performance.now();
-
-        console.info(`[ZipSolver] Executing continuous drag solve (${sequenceToClick.length} nodes, Mode: ${options.speed || 'fast'}, stepDelay: ${baseStepDelay}ms)...`);
+        console.info(`[ZipSolver] Executing Human Stealth solve (${sequenceToClick.length} nodes, baseStepDelay: ${baseStepDelay}ms)...`);
 
         // 1. Initiate drag: pointerdown on start node
-        let coords = this.dispatchDragStart(orderedCells[sequenceToClick[0]], gridElement, { humanize: isHumanMode });
+        let coords = this.dispatchDragStart(orderedCells[sequenceToClick[0]], gridElement, { humanize: true });
 
         let prevDiff = null;
 
@@ -531,48 +527,44 @@
           const cellEl = orderedCells[cellIdx];
 
           if (i > 0 && cellEl) {
-            coords = this.dispatchDragMove(cellEl, gridElement, coords, { humanize: isHumanMode });
+            coords = this.dispatchDragMove(cellEl, gridElement, coords, { humanize: true });
           }
 
           if (i < sequenceToClick.length - 1) {
-            if (isHumanMode) {
-              let stepDelay = 110;
+            let stepDelay = baseStepDelay;
 
-              // 1. Direction change / cornering deceleration
-              if (i > 0 && i < sequenceToClick.length - 1) {
-                const currentDiff = sequenceToClick[i] - sequenceToClick[i - 1];
-                if (prevDiff !== null && currentDiff !== prevDiff) {
-                  stepDelay += 45 + Math.random() * 25;
-                }
-                prevDiff = currentDiff;
+            // 1. Direction change / cornering deceleration (fluid 90-degree wrist turn)
+            if (i > 0 && i < sequenceToClick.length - 1) {
+              const currentDiff = sequenceToClick[i] - sequenceToClick[i - 1];
+              if (prevDiff !== null && currentDiff !== prevDiff) {
+                stepDelay += 25 + Math.random() * 15;
               }
-
-              // 2. Waypoint reflection: hesitation on numbered nodes
-              const hasNumber = cellEl && (
-                cellEl.querySelector('[data-cell-content="true"]') ||
-                cellEl.querySelector('.trail-cell-content')
-              );
-              if (hasNumber && hasNumber.textContent.trim().length > 0) {
-                stepDelay += 85 + Math.random() * 35;
-              }
-
-              stepDelay += (Math.random() - 0.5) * 20;
-              await sleep(Math.max(10, Math.round(stepDelay)));
-            } else if (baseStepDelay > 0) {
-              // Fast mode: solves as fast as possible on native frame ticks
-              await sleep(baseStepDelay);
+              prevDiff = currentDiff;
             }
+
+            // 2. Waypoint reflection: natural hesitation on numbered nodes
+            const hasNumber = cellEl && (
+              cellEl.querySelector('[data-cell-content="true"]') ||
+              cellEl.querySelector('.trail-cell-content')
+            );
+            if (hasNumber && hasNumber.textContent.trim().length > 0) {
+              stepDelay += 40 + Math.random() * 20;
+            }
+
+            // 3. Realistic neuromuscular micro-jitter
+            stepDelay += (Math.random() - 0.5) * 12;
+            await sleep(Math.max(15, Math.round(stepDelay)));
           }
         }
 
         // 3. Final node: pointerup release to commit completed path and trigger win modal
         const lastCellEl = orderedCells[sequenceToClick[sequenceToClick.length - 1]];
-        this.dispatchDragEnd(lastCellEl, gridElement, coords, { humanize: isHumanMode });
+        this.dispatchDragEnd(lastCellEl, gridElement, coords, { humanize: true });
 
         const elapsed = (performance.now() - startTime).toFixed(0);
 
         // 4. Wait for LinkedIn's "See Results" button to appear
-        const seeResultsBtn = await this.waitForSeeResults(2500);
+        const seeResultsBtn = await this.waitForSeeResults(3000);
         if (seeResultsBtn) {
           console.info(`[ZipSolver] Puzzle solved successfully in ${elapsed}ms! "See Results" button is ready! 🎉`);
           seeResultsBtn.style.outline = '3px solid #22c55e';

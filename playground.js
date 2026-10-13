@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let currentPresetKey = '4x4';
   let currentPreset = PRESETS['4x4'];
-  let currentSpeed = 'fast'; // 'fast' (adaptive) or number (ms per step)
+  let currentSpeed = 65; // Human Stealth Pacing (~3-4s total solve time)
   let playerPath = [];
   let isMouseDown = false;
   let isSolvingAnimation = false;
@@ -65,16 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
       currentPresetKey = btn.dataset.preset;
       currentPreset = PRESETS[currentPresetKey];
       loadPreset(currentPreset);
-    });
-  });
-
-  // Speed pill listeners
-  document.querySelectorAll('.speed-pill').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.speed-pill').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const val = btn.dataset.speed;
-      currentSpeed = val === 'fast' ? 'fast' : parseInt(val, 10);
     });
   });
 
@@ -288,9 +278,9 @@ document.addEventListener('DOMContentLoaded', () => {
       statLength.textContent = `${result.fullSequence.length} cells`;
       statTurns.textContent = `${result.compressedTurns.length} turns`;
 
-      // Animate path sequentially as fast as the puzzle allows
+      // Animate path sequentially with Human Stealth pacing
       playerPath = [];
-      const stepDelay = currentSpeed === 'fast' ? 16 : (typeof currentSpeed === 'number' ? currentSpeed : 120);
+      const stepDelay = typeof currentSpeed === 'number' ? currentSpeed : 65;
 
       for (let i = 0; i < result.fullSequence.length; i++) {
         playerPath.push(result.fullSequence[i]);

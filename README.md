@@ -80,10 +80,11 @@ Click **Auto-Solve** and watch the solver connect every square to the finish lin
 ### 👁️ 2. Visual Hint Mode (Play Along)
 Don't want the bot to solve it for you? Click **Show Hints**. It renders a glowing, dashed guide with numbered badges on each cell. You can see the full path and draw it yourself to keep your streak honest.
 
-### ⏱️ 3. Pacing Options
-You can choose how fast the path draws:
-- **Fast:** Computes the exact Hamiltonian path and executes the continuous drag stroke dynamically as fast as the puzzle allows, using clean frame ticks so all events register accurately without artificial time restrictions.
-- **Human (Stealth):** Slows down around corners and pauses briefly at numbered checkpoints, looking just like a real person playing with a mouse.
+### ⏱️ 3. Refined Human Stealth Pacing (~3–4s)
+The solver operates in a unified, refined **Human Stealth mode**:
+- Solves naturally in **~3 to 4 seconds** on standard daily boards.
+- Features fluid cornering deceleration around 90° turns, realistic waypoint reflection pauses, and neuromuscular micro-jitter.
+- Prevents server save errors (`"There was an issue saving your game"`), guaranteeing your completed game registers smoothly with the **See Results** button and leaderboard rankings.
 
 ### ⌨️ 4. Keyboard Shortcuts
 - Press **`Alt + Shift + Z`** anywhere on the page to solve the puzzle instantly without clicking any menus.

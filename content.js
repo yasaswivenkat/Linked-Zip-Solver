@@ -10,7 +10,7 @@
 
   console.info('[ZipSolver] Content script active on page:', window.location.href);
 
-  let currentSpeed = 'fast'; // 'fast' | 'human'
+  let currentSpeed = 'human';
   let autoSolveEnabled = false;
   let hudVisible = true;
   let isPanelExpanded = false;
@@ -124,20 +124,12 @@
             </div>
           </div>
 
-          <div class="zip-hud-options-row">
-            <span class="zip-hud-options-label">Pacing:</span>
-            <div class="zip-hud-speed-group">
-              <button class="zip-hud-speed-btn ${currentSpeed === 'fast' ? 'active' : ''}" data-speed="fast" title="Fast adaptive solve">⚡ Fast</button>
-              <button class="zip-hud-speed-btn ${currentSpeed === 'human' ? 'active' : ''}" data-speed="human" title="Human Stealth: Realistic cornering deceleration & waypoint pauses">☕ Human</button>
+          <div class="zip-hud-options-row" style="background: rgba(56, 189, 248, 0.08); padding: 7px 10px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.25);">
+            <div style="font-size: 11px; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+              <span>☕</span>
+              <span><strong>Human Stealth Active:</strong> Natural ~3–4s fluid solve with corner deceleration</span>
             </div>
           </div>
-
-          ${currentSpeed === 'human' ? `
-            <div style="font-size: 10.5px; color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 5px 8px; border-radius: 6px; display: flex; align-items: center; gap: 6px;">
-              <span>🛡️</span>
-              <span>Human Stealth: Corner deceleration & waypoint pauses active</span>
-            </div>
-          ` : ''}
         </div>
       `;
 
@@ -230,17 +222,6 @@
           if (stepControls) stepControls.style.display = 'none';
         });
       }
-
-      // Speed selection
-      container.querySelectorAll('.zip-hud-speed-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          currentSpeed = btn.dataset.speed;
-          if (chrome.storage && chrome.storage.local) {
-            chrome.storage.local.set({ zip_speed: currentSpeed });
-          }
-          renderHud();
-        });
-      });
     }
   }
 

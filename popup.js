@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnHint = document.getElementById('btn-hint');
   const btnClear = document.getElementById('btn-clear');
 
-  const speedSelector = document.getElementById('speed-selector');
   const toggleAutosolve = document.getElementById('toggle-autosolve');
   const toggleHud = document.getElementById('toggle-hud');
 
@@ -24,14 +23,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const linkOpenGame = document.getElementById('link-open-game');
 
   let activeTab = null;
-  let currentSpeed = 'fast';
+  const currentSpeed = 'human';
 
   // Load persistent user preferences
-  chrome.storage.local.get(['zip_speed', 'zip_auto_solve', 'zip_hud_visible'], (res) => {
-    if (res.zip_speed) {
-      currentSpeed = res.zip_speed === 'instant' ? 'fast' : res.zip_speed;
-      updateSpeedUI(currentSpeed);
-    }
+  chrome.storage.local.get(['zip_auto_solve', 'zip_hud_visible'], (res) => {
     if (typeof res.zip_auto_solve === 'boolean') {
       toggleAutosolve.checked = res.zip_auto_solve;
     }
@@ -243,39 +238,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.error(e);
     }
   });
-
-  // Speed selection handler
-  speedSelector.querySelectorAll('.speed-option').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentSpeed = btn.dataset.speed;
-      updateSpeedUI(currentSpeed);
-      chrome.storage.local.set({ zip_speed: currentSpeed });
-      if (activeTab) {
-        sendMessageToTab(activeTab.id, { action: 'SET_SETTINGS', speed: currentSpeed }).catch(() => {});
-      }
-    });
-  });
-
-  const speedDescription = document.getElementById('speed-description');
-  const stealthPill = document.querySelector('.stealth-info-pill');
-
-  function updateSpeedUI(speed) {
-    speedSelector.querySelectorAll('.speed-option').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.speed === speed);
-    });
-
-    if (speedDescription) {
-      if (speed === 'fast' || speed === 'instant') {
-        speedDescription.textContent = 'Fast Pacing: Adaptive ultra-fast solve';
-      } else {
-        speedDescription.textContent = 'Human Stealth: Corner deceleration & reflection pauses';
-      }
-    }
-
-    if (stealthPill) {
-      stealthPill.style.display = speed === 'human' ? 'flex' : 'none';
-    }
-  }
 
   // Toggles handlers
   toggleAutosolve.addEventListener('change', () => {
