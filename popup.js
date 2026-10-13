@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load persistent user preferences
   chrome.storage.local.get(['zip_speed', 'zip_auto_solve', 'zip_hud_visible'], (res) => {
     if (res.zip_speed) {
-      currentSpeed = res.zip_speed;
+      currentSpeed = res.zip_speed === 'instant' ? 'fast' : res.zip_speed;
       updateSpeedUI(currentSpeed);
     }
     if (typeof res.zip_auto_solve === 'boolean') {
@@ -261,10 +261,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     if (speedDescription) {
-      if (speed === 'instant') {
-        speedDescription.textContent = 'Instantaneous: 0ms execution';
-      } else if (speed === 'fast') {
-        speedDescription.textContent = 'Fast Pacing: 35ms animated trace';
+      if (speed === 'fast' || speed === 'instant') {
+        speedDescription.textContent = 'Fast Pacing: 1.0s solve (LinkedIn safe)';
       } else {
         speedDescription.textContent = 'Human Stealth: Corner deceleration & reflection pauses';
       }

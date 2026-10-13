@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let currentPresetKey = '4x4';
   let currentPreset = PRESETS['4x4'];
-  let currentSpeed = 120; // ms per step
+  let currentSpeed = 'fast'; // 'fast' (1s calibrated) or number (ms per step)
   let playerPath = [];
   let isMouseDown = false;
   let isSolvingAnimation = false;
@@ -73,7 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.speed-pill').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      currentSpeed = parseInt(btn.dataset.speed, 10);
+      const val = btn.dataset.speed;
+      currentSpeed = val === 'fast' ? 'fast' : parseInt(val, 10);
     });
   });
 
@@ -289,11 +290,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Animate path sequentially
       playerPath = [];
+      const totalIntervals = Math.max(1, result.fullSequence.length - 1);
+      const stepDelay = currentSpeed === 'fast'
+        ? Math.max(15, Math.round(1000 / totalIntervals))
+        : (typeof currentSpeed === 'number' ? currentSpeed : 120);
+
       for (let i = 0; i < result.fullSequence.length; i++) {
         playerPath.push(result.fullSequence[i]);
         updatePathGraphics();
-        if (currentSpeed > 0) {
-          await new Promise(r => setTimeout(r, currentSpeed));
+        if (i < result.fullSequence.length - 1 && stepDelay > 0) {
+          await new Promise(r => setTimeout(r, stepDelay));
         }
       }
 

@@ -10,7 +10,7 @@
 
   console.info('[ZipSolver] Content script active on page:', window.location.href);
 
-  let currentSpeed = 'fast'; // 'instant' | 'fast' | 'human'
+  let currentSpeed = 'fast'; // 'fast' | 'human'
   let autoSolveEnabled = false;
   let hudVisible = true;
   let isPanelExpanded = false;
@@ -19,7 +19,7 @@
   // Retrieve user preferences from storage
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
     chrome.storage.local.get(['zip_speed', 'zip_auto_solve', 'zip_hud_visible'], (res) => {
-      if (res.zip_speed) currentSpeed = res.zip_speed;
+      if (res.zip_speed) currentSpeed = res.zip_speed === 'instant' ? 'fast' : res.zip_speed;
       if (typeof res.zip_auto_solve === 'boolean') autoSolveEnabled = res.zip_auto_solve;
       if (typeof res.zip_hud_visible === 'boolean') hudVisible = res.zip_hud_visible;
       renderHud();
@@ -127,8 +127,7 @@
           <div class="zip-hud-options-row">
             <span class="zip-hud-options-label">Pacing:</span>
             <div class="zip-hud-speed-group">
-              <button class="zip-hud-speed-btn ${currentSpeed === 'instant' ? 'active' : ''}" data-speed="instant" title="Instantaneous solve">Instant</button>
-              <button class="zip-hud-speed-btn ${currentSpeed === 'fast' ? 'active' : ''}" data-speed="fast" title="Fast smooth draw">Fast</button>
+              <button class="zip-hud-speed-btn ${currentSpeed === 'fast' ? 'active' : ''}" data-speed="fast" title="Fast 1-second solve (LinkedIn save verified)">⚡ Fast (1s)</button>
               <button class="zip-hud-speed-btn ${currentSpeed === 'human' ? 'active' : ''}" data-speed="human" title="Human Stealth: Realistic cornering deceleration & waypoint pauses">☕ Human</button>
             </div>
           </div>

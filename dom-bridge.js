@@ -310,7 +310,7 @@
     /**
      * Executes the automatic puzzle solve by clicking cells.
      * Includes Human Stealth Mimicry with variable cornering latencies and waypoint reflection pauses.
-     * @param {Object} options Options: speed ('instant' | 'fast' | 'human' | number), useCompressed (boolean)
+     * @param {Object} options Options: speed ('fast' | 'human' | number), useCompressed (boolean)
      */
     async executeSolve(options = {}) {
       if (this.isSolving) {
@@ -323,16 +323,25 @@
         const { orderedCells, fullSequence, compressedTurns } = await this.solveCurrentGame();
         this.clearHintOverlay();
 
-        const isHumanMode = options.speed === 'human';
-        let baseDelay = 60;
-        if (options.speed === 'instant') baseDelay = 0;
-        else if (options.speed === 'fast') baseDelay = 35;
-        else if (isHumanMode) baseDelay = 110;
-        else if (typeof options.speed === 'number') baseDelay = options.speed;
-
         const sequenceToClick = options.useTurnPoints ? compressedTurns : fullSequence;
+        const isHumanMode = options.speed === 'human';
 
-        console.info(`[ZipSolver] Executing solve (${sequenceToClick.length} clicks, Mode: ${options.speed || 'default'})...`);
+        // Calculate pacing: Fast mode is calibrated to exactly 1.0 second (1000ms)
+        // to prevent LinkedIn's rate limit error ("There was an issue saving your game").
+        let baseDelay;
+        if (options.speed === 'fast' || options.speed === 'instant' || !options.speed) {
+          const totalIntervals = Math.max(1, sequenceToClick.length - 1);
+          baseDelay = Math.max(15, Math.round(1000 / totalIntervals));
+        } else if (isHumanMode) {
+          baseDelay = 110;
+        } else if (typeof options.speed === 'number') {
+          baseDelay = options.speed;
+        } else {
+          const totalIntervals = Math.max(1, sequenceToClick.length - 1);
+          baseDelay = Math.max(15, Math.round(1000 / totalIntervals));
+        }
+
+        console.info(`[ZipSolver] Executing solve (${sequenceToClick.length} clicks, Mode: ${options.speed || 'fast'}, stepDelay: ${baseDelay}ms)...`);
 
         let prevDiff = null;
 
@@ -344,7 +353,7 @@
             this.dispatchInteraction(cellEl, { humanize: isHumanMode });
           }
 
-          if (baseDelay > 0) {
+          if (i < sequenceToClick.length - 1 && baseDelay > 0) {
             let stepDelay = baseDelay;
 
             if (isHumanMode) {
