@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let currentPresetKey = '4x4';
   let currentPreset = PRESETS['4x4'];
-  let currentSpeed = 'fast'; // 'fast' (1s calibrated) or number (ms per step)
+  let currentSpeed = 'fast'; // 'fast' (2s calibrated) or number (ms per step)
   let playerPath = [];
   let isMouseDown = false;
   let isSolvingAnimation = false;
@@ -288,18 +288,26 @@ document.addEventListener('DOMContentLoaded', () => {
       statLength.textContent = `${result.fullSequence.length} cells`;
       statTurns.textContent = `${result.compressedTurns.length} turns`;
 
-      // Animate path sequentially
+      // Animate path sequentially in exactly 2.0 seconds
       playerPath = [];
       const totalIntervals = Math.max(1, result.fullSequence.length - 1);
-      const stepDelay = currentSpeed === 'fast'
-        ? Math.max(15, Math.round(1000 / totalIntervals))
-        : (typeof currentSpeed === 'number' ? currentSpeed : 120);
+      const TOTAL_PLAYGROUND_MS = 2000;
+      const animStart = performance.now();
 
       for (let i = 0; i < result.fullSequence.length; i++) {
         playerPath.push(result.fullSequence[i]);
         updatePathGraphics();
-        if (i < result.fullSequence.length - 1 && stepDelay > 0) {
-          await new Promise(r => setTimeout(r, stepDelay));
+        if (i < result.fullSequence.length - 1) {
+          if (currentSpeed === 'fast') {
+            const targetTime = animStart + ((i + 1) / totalIntervals) * TOTAL_PLAYGROUND_MS;
+            const remaining = targetTime - performance.now();
+            if (remaining > 0) {
+              await new Promise(r => setTimeout(r, remaining));
+            }
+          } else {
+            const stepDelay = typeof currentSpeed === 'number' ? currentSpeed : 120;
+            await new Promise(r => setTimeout(r, stepDelay));
+          }
         }
       }
 

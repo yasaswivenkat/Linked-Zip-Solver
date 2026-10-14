@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (speedDescription) {
       if (speed === 'fast' || speed === 'instant') {
-        speedDescription.textContent = 'Fast Pacing: 1.0s solve (LinkedIn safe)';
+        speedDescription.textContent = 'Fast Pacing: 2.0s solve (LinkedIn safe)';
       } else {
         speedDescription.textContent = 'Human Stealth: Corner deceleration & reflection pauses';
       }

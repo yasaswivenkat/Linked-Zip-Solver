@@ -297,9 +297,11 @@
         isPrimary: true
       };
 
-      // Full event suite simulating human contact
+      // Full event suite simulating natural user interaction
       targetEl.dispatchEvent(new PointerEvent('pointerover', eventInit));
       targetEl.dispatchEvent(new PointerEvent('pointerenter', eventInit));
+      targetEl.dispatchEvent(new PointerEvent('pointermove', eventInit));
+      targetEl.dispatchEvent(new MouseEvent('mousemove', eventInit));
       targetEl.dispatchEvent(new PointerEvent('pointerdown', eventInit));
       targetEl.dispatchEvent(new MouseEvent('mousedown', eventInit));
       targetEl.dispatchEvent(new PointerEvent('pointerup', eventInit));
@@ -326,22 +328,13 @@
         const sequenceToClick = options.useTurnPoints ? compressedTurns : fullSequence;
         const isHumanMode = options.speed === 'human';
 
-        // Calculate pacing: Fast mode is calibrated to exactly 1.0 second (1000ms)
+        // Fast mode is calibrated to EXACTLY 2.0 seconds (2000ms) total duration
         // to prevent LinkedIn's rate limit error ("There was an issue saving your game").
-        let baseDelay;
-        if (options.speed === 'fast' || options.speed === 'instant' || !options.speed) {
-          const totalIntervals = Math.max(1, sequenceToClick.length - 1);
-          baseDelay = Math.max(15, Math.round(1000 / totalIntervals));
-        } else if (isHumanMode) {
-          baseDelay = 110;
-        } else if (typeof options.speed === 'number') {
-          baseDelay = options.speed;
-        } else {
-          const totalIntervals = Math.max(1, sequenceToClick.length - 1);
-          baseDelay = Math.max(15, Math.round(1000 / totalIntervals));
-        }
+        const TOTAL_DURATION_MS = 2000;
+        const totalIntervals = Math.max(1, sequenceToClick.length - 1);
+        const startTime = performance.now();
 
-        console.info(`[ZipSolver] Executing solve (${sequenceToClick.length} clicks, Mode: ${options.speed || 'fast'}, stepDelay: ${baseDelay}ms)...`);
+        console.info(`[ZipSolver] Executing solve (${sequenceToClick.length} clicks, Target Duration: 2.0s, Mode: ${options.speed || 'fast'})...`);
 
         let prevDiff = null;
 
@@ -353,10 +346,10 @@
             this.dispatchInteraction(cellEl, { humanize: isHumanMode });
           }
 
-          if (i < sequenceToClick.length - 1 && baseDelay > 0) {
-            let stepDelay = baseDelay;
-
+          if (i < sequenceToClick.length - 1) {
             if (isHumanMode) {
+              let stepDelay = 110;
+
               // 1. Direction change / cornering deceleration
               if (i > 0 && i < sequenceToClick.length - 1) {
                 const currentDiff = sequenceToClick[i] - sequenceToClick[i - 1];
@@ -378,14 +371,25 @@
 
               // 3. Natural micro-jitter (normal distribution around base speed)
               stepDelay += (Math.random() - 0.5) * 20;
-            }
 
-            await sleep(Math.max(10, Math.round(stepDelay)));
+              await sleep(Math.max(10, Math.round(stepDelay)));
+            } else if (typeof options.speed === 'number') {
+              await sleep(options.speed);
+            } else {
+              // Fast mode: zero-drift schedule ensuring the complete solve finishes
+              // in EXACTLY 2.0 seconds (2000ms), giving LinkedIn adequate time to save.
+              const targetTime = startTime + ((i + 1) / totalIntervals) * TOTAL_DURATION_MS;
+              const remainingWait = targetTime - performance.now();
+              if (remainingWait > 0) {
+                await sleep(remainingWait);
+              }
+            }
           }
         }
 
-        console.info('[ZipSolver] Puzzle solved successfully! 🎉');
-        return { success: true, count: sequenceToClick.length };
+        const elapsed = (performance.now() - startTime).toFixed(0);
+        console.info(`[ZipSolver] Puzzle solved successfully in ${elapsed}ms! 🎉`);
+        return { success: true, count: sequenceToClick.length, duration: elapsed };
       } finally {
         this.isSolving = false;
       }

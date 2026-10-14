@@ -18,7 +18,7 @@
   I built this little extension to take the frustration away. It uses a graph-theory backtracking algorithm to find the exact Hamiltonian path across the board in <b>less than 0.05 milliseconds</b>.
   <br/>
   <br/>
-  <i>Solve it smoothly in 1 second, get subtle glowing hints if you want to play along, or watch it draw with realistic human-like pacing.</i>
+  <i>Solve it smoothly in 2 seconds, get subtle glowing hints if you want to play along, or watch it draw with realistic human-like pacing.</i>
 </p>
 
 [Quick Install (1 Minute)](#-how-to-install-takes-1-minute) •
@@ -82,11 +82,11 @@ Don't want the bot to solve it for you? Click **Show Hints**. It renders a glowi
 
 ### ⏱️ 3. Calibrated Pacing Options
 You can choose how fast the path draws:
-- **Fast (1s):** Solves the whole puzzle smoothly in 1.0 second across any grid size. LinkedIn's game servers validate move timestamps—drawing in 0ms or raw milliseconds triggers *"There was an issue saving your game. Please refresh to try again"*. The 1s timing ensures your game and daily streak are saved cleanly every time.
+- **Fast (2s):** Solves the whole puzzle smoothly in exactly 2.0 seconds across any grid size. LinkedIn's game servers validate move timestamps and drag kinematics—drawing too fast or in sub-seconds triggers *"There was an issue saving your game. Please refresh to try again"*. The exact 2s timing ensures every move registers with LinkedIn's server and your daily streak is saved cleanly every time.
 - **Human (Stealth):** Slows down around corners and pauses briefly at numbered checkpoints, looking just like a real person playing with a mouse.
 
 ### ⌨️ 4. Keyboard Shortcuts
-- Press **`Alt + Shift + Z`** anywhere on the page to solve the puzzle in 1s without clicking any menus.
+- Press **`Alt + Shift + Z`** anywhere on the page to solve the puzzle in 2s without clicking any menus.
 
 ---
 
