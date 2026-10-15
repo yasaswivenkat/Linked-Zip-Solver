@@ -297,7 +297,7 @@
         isPrimary: true
       };
 
-      // Full event suite simulating natural user interaction
+      // Full event suite simulating human contact
       targetEl.dispatchEvent(new PointerEvent('pointerover', eventInit));
       targetEl.dispatchEvent(new PointerEvent('pointerenter', eventInit));
       targetEl.dispatchEvent(new PointerEvent('pointermove', eventInit));
@@ -328,13 +328,13 @@
         const sequenceToClick = options.useTurnPoints ? compressedTurns : fullSequence;
         const isHumanMode = options.speed === 'human';
 
-        // Fast mode is calibrated to EXACTLY 2.0 seconds (2000ms) total duration
+        // Fast mode is calibrated to EXACTLY 1.0 second (1000ms) total duration
         // to prevent LinkedIn's rate limit error ("There was an issue saving your game").
-        const TOTAL_DURATION_MS = 2000;
+        const TOTAL_DURATION_MS = 1000;
         const totalIntervals = Math.max(1, sequenceToClick.length - 1);
         const startTime = performance.now();
 
-        console.info(`[ZipSolver] Executing solve (${sequenceToClick.length} clicks, Target Duration: 2.0s, Mode: ${options.speed || 'fast'})...`);
+        console.info(`[ZipSolver] Executing solve (${sequenceToClick.length} clicks, Target Duration: 1.0s, Mode: ${options.speed || 'fast'})...`);
 
         let prevDiff = null;
 
@@ -377,7 +377,7 @@
               await sleep(options.speed);
             } else {
               // Fast mode: zero-drift schedule ensuring the complete solve finishes
-              // in EXACTLY 2.0 seconds (2000ms), giving LinkedIn adequate time to save.
+              // in EXACTLY 1.0 second (1000ms), giving LinkedIn adequate time to save.
               const targetTime = startTime + ((i + 1) / totalIntervals) * TOTAL_DURATION_MS;
               const remainingWait = targetTime - performance.now();
               if (remainingWait > 0) {

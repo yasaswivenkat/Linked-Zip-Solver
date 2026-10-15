@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let currentPresetKey = '4x4';
   let currentPreset = PRESETS['4x4'];
-  let currentSpeed = 'fast'; // 'fast' (2s calibrated) or number (ms per step)
+  let currentSpeed = 'fast'; // 'fast' (1s calibrated) or number (ms per step)
   let playerPath = [];
   let isMouseDown = false;
   let isSolvingAnimation = false;
@@ -288,10 +288,10 @@ document.addEventListener('DOMContentLoaded', () => {
       statLength.textContent = `${result.fullSequence.length} cells`;
       statTurns.textContent = `${result.compressedTurns.length} turns`;
 
-      // Animate path sequentially in exactly 2.0 seconds
+      // Animate path sequentially in exactly 1.0 second
       playerPath = [];
       const totalIntervals = Math.max(1, result.fullSequence.length - 1);
-      const TOTAL_PLAYGROUND_MS = 2000;
+      const TOTAL_PLAYGROUND_MS = 1000;
       const animStart = performance.now();
 
       for (let i = 0; i < result.fullSequence.length; i++) {
