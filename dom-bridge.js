@@ -273,14 +273,177 @@
     /**
      * Dispatches human-like pointer and mouse events to a cell with micro-jitter.
      */
+    /**
+     * Starts continuous pointer drag on starting cell
+     */
+    dispatchDragStart(targetEl, gridEl, options = {}) {
+      if (!targetEl) return { clientX: 0, clientY: 0 };
+      const rect = targetEl.getBoundingClientRect();
+      const jitterX = options.humanize ? (Math.random() - 0.5) * 6 : 0;
+      const jitterY = options.humanize ? (Math.random() - 0.5) * 6 : 0;
+      const clientX = rect.left + rect.width / 2 + jitterX;
+      const clientY = rect.top + rect.height / 2 + jitterY;
+
+      const downInit = {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX,
+        clientY,
+        screenX: clientX + (window.screenX || 0),
+        screenY: clientY + (window.screenY || 0),
+        button: 0,
+        buttons: 1,
+        pointerId: 1,
+        pointerType: 'mouse',
+        isPrimary: true,
+        pressure: 0.5
+      };
+
+      targetEl.dispatchEvent(new PointerEvent('pointerover', downInit));
+      targetEl.dispatchEvent(new PointerEvent('pointerenter', downInit));
+      targetEl.dispatchEvent(new PointerEvent('pointerdown', downInit));
+      targetEl.dispatchEvent(new MouseEvent('mousedown', downInit));
+
+      const inner = targetEl.querySelector('[data-cell-content="true"]') || targetEl.querySelector('.trail-cell-content');
+      if (inner) {
+        inner.dispatchEvent(new PointerEvent('pointerdown', downInit));
+        inner.dispatchEvent(new MouseEvent('mousedown', downInit));
+      }
+
+      return { clientX, clientY };
+    }
+
+    /**
+     * Moves continuous pointer drag to next cell (maintaining pointerdown)
+     */
+    dispatchDragMove(targetEl, gridEl, prevCoords, options = {}) {
+      if (!targetEl) return prevCoords;
+      const rect = targetEl.getBoundingClientRect();
+      const jitterX = options.humanize ? (Math.random() - 0.5) * 6 : 0;
+      const jitterY = options.humanize ? (Math.random() - 0.5) * 6 : 0;
+      const clientX = rect.left + rect.width / 2 + jitterX;
+      const clientY = rect.top + rect.height / 2 + jitterY;
+
+      const moveInit = {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX,
+        clientY,
+        screenX: clientX + (window.screenX || 0),
+        screenY: clientY + (window.screenY || 0),
+        button: 0,
+        buttons: 1,
+        pointerId: 1,
+        pointerType: 'mouse',
+        isPrimary: true,
+        pressure: 0.5
+      };
+
+      window.dispatchEvent(new PointerEvent('pointermove', moveInit));
+      window.dispatchEvent(new MouseEvent('mousemove', moveInit));
+      if (gridEl) {
+        gridEl.dispatchEvent(new PointerEvent('pointermove', moveInit));
+        gridEl.dispatchEvent(new MouseEvent('mousemove', moveInit));
+      }
+
+      targetEl.dispatchEvent(new PointerEvent('pointerover', moveInit));
+      targetEl.dispatchEvent(new PointerEvent('pointerenter', moveInit));
+      targetEl.dispatchEvent(new PointerEvent('pointermove', moveInit));
+      targetEl.dispatchEvent(new MouseEvent('mousemove', moveInit));
+
+      const inner = targetEl.querySelector('[data-cell-content="true"]') || targetEl.querySelector('.trail-cell-content');
+      if (inner) {
+        inner.dispatchEvent(new PointerEvent('pointerenter', moveInit));
+        inner.dispatchEvent(new PointerEvent('pointermove', moveInit));
+      }
+
+      // Also fire click event (for hybrid click-tracking systems)
+      targetEl.dispatchEvent(new MouseEvent('click', { ...moveInit, buttons: 0 }));
+
+      return { clientX, clientY };
+    }
+
+    /**
+     * Releases pointer drag on the final cell to commit the completed puzzle
+     */
+    dispatchDragEnd(targetEl, gridEl, coords, options = {}) {
+      if (!targetEl) return;
+      const rect = targetEl.getBoundingClientRect();
+      const clientX = rect.left + rect.width / 2;
+      const clientY = rect.top + rect.height / 2;
+
+      const moveInit = {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX,
+        clientY,
+        screenX: clientX + (window.screenX || 0),
+        screenY: clientY + (window.screenY || 0),
+        button: 0,
+        buttons: 1,
+        pointerId: 1,
+        pointerType: 'mouse',
+        isPrimary: true,
+        pressure: 0.5
+      };
+
+      targetEl.dispatchEvent(new PointerEvent('pointermove', moveInit));
+      targetEl.dispatchEvent(new MouseEvent('mousemove', moveInit));
+
+      const upInit = {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX,
+        clientY,
+        screenX: clientX + (window.screenX || 0),
+        screenY: clientY + (window.screenY || 0),
+        button: 0,
+        buttons: 0, // MUST BE 0 WHEN RELEASED!
+        pointerId: 1,
+        pointerType: 'mouse',
+        isPrimary: true,
+        pressure: 0
+      };
+
+      // Pointer up on target cell
+      targetEl.dispatchEvent(new PointerEvent('pointerup', upInit));
+      targetEl.dispatchEvent(new MouseEvent('mouseup', upInit));
+
+      // Pointer up on grid
+      if (gridEl) {
+        gridEl.dispatchEvent(new PointerEvent('pointerup', upInit));
+        gridEl.dispatchEvent(new MouseEvent('mouseup', upInit));
+      }
+
+      // Pointer up on window and document (global drag handlers)
+      window.dispatchEvent(new PointerEvent('pointerup', upInit));
+      window.dispatchEvent(new MouseEvent('mouseup', upInit));
+      document.dispatchEvent(new PointerEvent('pointerup', upInit));
+      document.dispatchEvent(new MouseEvent('mouseup', upInit));
+
+      // Final click on target cell
+      targetEl.dispatchEvent(new MouseEvent('click', upInit));
+
+      const inner = targetEl.querySelector('[data-cell-content="true"]') || targetEl.querySelector('.trail-cell-content');
+      if (inner) {
+        inner.dispatchEvent(new PointerEvent('pointerup', upInit));
+        inner.dispatchEvent(new MouseEvent('mouseup', upInit));
+        inner.dispatchEvent(new MouseEvent('click', upInit));
+      }
+    }
+
+    /**
+     * Fallback interaction for discrete cell clicks
+     */
     dispatchInteraction(targetEl, options = {}) {
       if (!targetEl) return;
       const rect = targetEl.getBoundingClientRect();
-
-      // Humanized sub-pixel jitter: avoids robotic dead-center clicks
       const jitterX = options.humanize ? (Math.random() - 0.5) * 6 : 0;
       const jitterY = options.humanize ? (Math.random() - 0.5) * 6 : 0;
-
       const clientX = rect.left + rect.width / 2 + jitterX;
       const clientY = rect.top + rect.height / 2 + jitterY;
 
@@ -297,21 +460,39 @@
         isPrimary: true
       };
 
-      // Full event suite simulating human contact
       targetEl.dispatchEvent(new PointerEvent('pointerover', eventInit));
       targetEl.dispatchEvent(new PointerEvent('pointerenter', eventInit));
       targetEl.dispatchEvent(new PointerEvent('pointermove', eventInit));
       targetEl.dispatchEvent(new MouseEvent('mousemove', eventInit));
       targetEl.dispatchEvent(new PointerEvent('pointerdown', eventInit));
       targetEl.dispatchEvent(new MouseEvent('mousedown', eventInit));
-      targetEl.dispatchEvent(new PointerEvent('pointerup', eventInit));
-      targetEl.dispatchEvent(new MouseEvent('mouseup', eventInit));
-      targetEl.dispatchEvent(new MouseEvent('click', eventInit));
+      targetEl.dispatchEvent(new PointerEvent('pointerup', { ...eventInit, buttons: 0 }));
+      targetEl.dispatchEvent(new MouseEvent('mouseup', { ...eventInit, buttons: 0 }));
+      targetEl.dispatchEvent(new MouseEvent('click', { ...eventInit, buttons: 0 }));
     }
 
     /**
-     * Executes the automatic puzzle solve by clicking cells.
-     * Includes Human Stealth Mimicry with variable cornering latencies and waypoint reflection pauses.
+     * Checks if LinkedIn's "See Results" / completion button is visible on page
+     */
+    async waitForSeeResults(timeoutMs = 3000) {
+      const start = performance.now();
+      while (performance.now() - start < timeoutMs) {
+        const buttons = Array.from(document.querySelectorAll('button, a'));
+        const found = buttons.find(b => {
+          const text = (b.textContent || '').trim().toLowerCase();
+          return text.includes('see results') || text.includes('view results') || text.includes('see result');
+        });
+        if (found && (found.offsetWidth > 0 || found.offsetHeight > 0)) {
+          return found;
+        }
+        await sleep(150);
+      }
+      return null;
+    }
+
+    /**
+     * Executes the automatic puzzle solve via continuous pointer drag.
+     * Starts with pointerdown at Node 1, draws through all cells, and releases pointerup at finish.
      * @param {Object} options Options: speed ('fast' | 'human' | number), useCompressed (boolean)
      */
     async executeSolve(options = {}) {
@@ -322,7 +503,7 @@
 
       this.isSolving = true;
       try {
-        const { orderedCells, fullSequence, compressedTurns } = await this.solveCurrentGame();
+        const { gridElement, orderedCells, fullSequence, compressedTurns } = await this.solveCurrentGame();
         this.clearHintOverlay();
 
         const sequenceToClick = options.useTurnPoints ? compressedTurns : fullSequence;
@@ -334,16 +515,20 @@
         const totalIntervals = Math.max(1, sequenceToClick.length - 1);
         const startTime = performance.now();
 
-        console.info(`[ZipSolver] Executing solve (${sequenceToClick.length} clicks, Target Duration: 1.0s, Mode: ${options.speed || 'fast'})...`);
+        console.info(`[ZipSolver] Executing continuous drag solve (${sequenceToClick.length} nodes, Target Duration: 1.0s, Mode: ${options.speed || 'fast'})...`);
+
+        // 1. Initiate drag: pointerdown on start node
+        let coords = this.dispatchDragStart(orderedCells[sequenceToClick[0]], gridElement, { humanize: isHumanMode });
 
         let prevDiff = null;
 
+        // 2. Drag continuously across the board
         for (let i = 0; i < sequenceToClick.length; i++) {
           const cellIdx = sequenceToClick[i];
           const cellEl = orderedCells[cellIdx];
 
-          if (cellEl) {
-            this.dispatchInteraction(cellEl, { humanize: isHumanMode });
+          if (i > 0 && cellEl) {
+            coords = this.dispatchDragMove(cellEl, gridElement, coords, { humanize: isHumanMode });
           }
 
           if (i < sequenceToClick.length - 1) {
@@ -354,13 +539,12 @@
               if (i > 0 && i < sequenceToClick.length - 1) {
                 const currentDiff = sequenceToClick[i] - sequenceToClick[i - 1];
                 if (prevDiff !== null && currentDiff !== prevDiff) {
-                  // Decelerate at 90-degree corner like a human hand
                   stepDelay += 45 + Math.random() * 25;
                 }
                 prevDiff = currentDiff;
               }
 
-              // 2. Waypoint reflection: natural hesitation on numbered nodes
+              // 2. Waypoint reflection: hesitation on numbered nodes
               const hasNumber = cellEl && (
                 cellEl.querySelector('[data-cell-content="true"]') ||
                 cellEl.querySelector('.trail-cell-content')
@@ -369,15 +553,12 @@
                 stepDelay += 85 + Math.random() * 35;
               }
 
-              // 3. Natural micro-jitter (normal distribution around base speed)
               stepDelay += (Math.random() - 0.5) * 20;
-
               await sleep(Math.max(10, Math.round(stepDelay)));
             } else if (typeof options.speed === 'number') {
               await sleep(options.speed);
             } else {
-              // Fast mode: zero-drift schedule ensuring the complete solve finishes
-              // in EXACTLY 1.0 second (1000ms), giving LinkedIn adequate time to save.
+              // Fast mode: zero-drift schedule ensuring complete solve finishes in exactly 1.0s
               const targetTime = startTime + ((i + 1) / totalIntervals) * TOTAL_DURATION_MS;
               const remainingWait = targetTime - performance.now();
               if (remainingWait > 0) {
@@ -387,9 +568,23 @@
           }
         }
 
+        // 3. Final node: pointerup release to commit completed path and trigger win modal
+        const lastCellEl = orderedCells[sequenceToClick[sequenceToClick.length - 1]];
+        this.dispatchDragEnd(lastCellEl, gridElement, coords, { humanize: isHumanMode });
+
         const elapsed = (performance.now() - startTime).toFixed(0);
-        console.info(`[ZipSolver] Puzzle solved successfully in ${elapsed}ms! 🎉`);
-        return { success: true, count: sequenceToClick.length, duration: elapsed };
+
+        // 4. Wait for LinkedIn's "See Results" button to appear
+        const seeResultsBtn = await this.waitForSeeResults(2500);
+        if (seeResultsBtn) {
+          console.info(`[ZipSolver] Puzzle solved successfully in ${elapsed}ms! "See Results" button is ready! 🎉`);
+          seeResultsBtn.style.outline = '3px solid #22c55e';
+          seeResultsBtn.style.boxShadow = '0 0 24px rgba(34, 197, 94, 0.8)';
+          return { success: true, count: sequenceToClick.length, duration: elapsed, hasResultsBtn: true };
+        } else {
+          console.info(`[ZipSolver] Puzzle solved in ${elapsed}ms! 🎉`);
+          return { success: true, count: sequenceToClick.length, duration: elapsed, hasResultsBtn: false };
+        }
       } finally {
         this.isSolving = false;
       }

@@ -153,12 +153,16 @@
           solveBtn.disabled = true;
           solveBtn.textContent = 'Solving...';
           try {
-            await window.ZipDomBridge.executeSolve({ speed: currentSpeed });
-            solveBtn.textContent = 'Solved! 🎉';
+            const res = await window.ZipDomBridge.executeSolve({ speed: currentSpeed });
+            if (res && res.hasResultsBtn) {
+              solveBtn.textContent = 'See Results Ready! 🎉';
+            } else {
+              solveBtn.textContent = 'Solved in 1s! 🎉';
+            }
             setTimeout(() => {
               solveBtn.textContent = 'Auto-Solve Puzzle';
               solveBtn.disabled = false;
-            }, 2000);
+            }, 3000);
           } catch (err) {
             console.error('[ZipSolver] Solve error:', err);
             solveBtn.textContent = 'Error: ' + err.message;
@@ -245,12 +249,12 @@
     if (!autoSolveEnabled || autoSolveTriggered) return;
     if (window.ZipDomBridge && window.ZipDomBridge.isGamePresent()) {
       autoSolveTriggered = true;
-      console.info('[ZipSolver] Auto-solve on load triggered in 1.2s...');
+      console.info('[ZipSolver] Auto-solve on load triggered in 250ms...');
       setTimeout(() => {
         window.ZipDomBridge.executeSolve({ speed: currentSpeed }).catch(err => {
           console.error('[ZipSolver] Auto-solve error:', err);
         });
-      }, 1200);
+      }, 250);
     }
   }
 

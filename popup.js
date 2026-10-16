@@ -202,11 +202,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       if (response && response.success) {
-        btnSolveText.textContent = 'Solved Successfully! 🎉';
+        if (response.result && response.result.hasResultsBtn) {
+          btnSolveText.textContent = 'See Results Ready! 🎉';
+        } else {
+          btnSolveText.textContent = 'Solved in 1s! 🎉';
+        }
         setTimeout(() => {
           btnSolveText.textContent = 'Auto-Solve Puzzle';
           btnSolve.disabled = false;
-        }, 2500);
+        }, 3000);
       } else {
         throw new Error(response ? response.error : 'Unknown solve error');
       }
