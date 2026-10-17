@@ -127,7 +127,7 @@
           <div class="zip-hud-options-row">
             <span class="zip-hud-options-label">Pacing:</span>
             <div class="zip-hud-speed-group">
-              <button class="zip-hud-speed-btn ${currentSpeed === 'fast' ? 'active' : ''}" data-speed="fast" title="Fast 1-second solve (LinkedIn save verified)">⚡ Fast (1s)</button>
+              <button class="zip-hud-speed-btn ${currentSpeed === 'fast' ? 'active' : ''}" data-speed="fast" title="Fast adaptive solve">⚡ Fast</button>
               <button class="zip-hud-speed-btn ${currentSpeed === 'human' ? 'active' : ''}" data-speed="human" title="Human Stealth: Realistic cornering deceleration & waypoint pauses">☕ Human</button>
             </div>
           </div>
@@ -157,7 +157,7 @@
             if (res && res.hasResultsBtn) {
               solveBtn.textContent = 'See Results Ready! 🎉';
             } else {
-              solveBtn.textContent = 'Solved in 1s! 🎉';
+              solveBtn.textContent = 'Solved! 🎉';
             }
             setTimeout(() => {
               solveBtn.textContent = 'Auto-Solve Puzzle';

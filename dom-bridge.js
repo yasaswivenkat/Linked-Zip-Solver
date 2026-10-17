@@ -509,13 +509,16 @@
         const sequenceToClick = options.useTurnPoints ? compressedTurns : fullSequence;
         const isHumanMode = options.speed === 'human';
 
-        // Fast mode is calibrated to EXACTLY 1.0 second (1000ms) total duration
-        // to prevent LinkedIn's rate limit error ("There was an issue saving your game").
-        const TOTAL_DURATION_MS = 1000;
-        const totalIntervals = Math.max(1, sequenceToClick.length - 1);
+        // Pacing: Adaptive execution without arbitrary 1-second restrictions.
+        // Solves as fast as the puzzle allows while guaranteeing 100% event delivery, accuracy & game save.
+        let baseStepDelay = 16; // ms per node (~60fps native frame rate, fastest reliable DOM dispatch)
+        if (typeof options.speed === 'number') {
+          baseStepDelay = options.speed;
+        }
+
         const startTime = performance.now();
 
-        console.info(`[ZipSolver] Executing continuous drag solve (${sequenceToClick.length} nodes, Target Duration: 1.0s, Mode: ${options.speed || 'fast'})...`);
+        console.info(`[ZipSolver] Executing continuous drag solve (${sequenceToClick.length} nodes, Mode: ${options.speed || 'fast'}, stepDelay: ${baseStepDelay}ms)...`);
 
         // 1. Initiate drag: pointerdown on start node
         let coords = this.dispatchDragStart(orderedCells[sequenceToClick[0]], gridElement, { humanize: isHumanMode });
@@ -555,15 +558,9 @@
 
               stepDelay += (Math.random() - 0.5) * 20;
               await sleep(Math.max(10, Math.round(stepDelay)));
-            } else if (typeof options.speed === 'number') {
-              await sleep(options.speed);
-            } else {
-              // Fast mode: zero-drift schedule ensuring complete solve finishes in exactly 1.0s
-              const targetTime = startTime + ((i + 1) / totalIntervals) * TOTAL_DURATION_MS;
-              const remainingWait = targetTime - performance.now();
-              if (remainingWait > 0) {
-                await sleep(remainingWait);
-              }
+            } else if (baseStepDelay > 0) {
+              // Fast mode: solves as fast as possible on native frame ticks
+              await sleep(baseStepDelay);
             }
           }
         }

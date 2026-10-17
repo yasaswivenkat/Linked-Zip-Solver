@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (response.result && response.result.hasResultsBtn) {
           btnSolveText.textContent = 'See Results Ready! 🎉';
         } else {
-          btnSolveText.textContent = 'Solved in 1s! 🎉';
+          btnSolveText.textContent = 'Solved! 🎉';
         }
         setTimeout(() => {
           btnSolveText.textContent = 'Auto-Solve Puzzle';
@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (speedDescription) {
       if (speed === 'fast' || speed === 'instant') {
-        speedDescription.textContent = 'Fast Pacing: 1.0s solve (LinkedIn safe)';
+        speedDescription.textContent = 'Fast Pacing: Adaptive ultra-fast solve';
       } else {
         speedDescription.textContent = 'Human Stealth: Corner deceleration & reflection pauses';
       }
